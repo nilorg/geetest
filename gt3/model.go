@@ -81,3 +81,11 @@ func (req *ValidateRequest) Validation() (err error) {
 type ValidateResponse struct {
 	Seccode string `json:"seccode"` // 验证结果标识，为”false”表示验证不通过
 }
+
+// RegisterResponseForWeb register response for web
+type RegisterResponseForWeb struct {
+	Success    int    `json:"success"`     // 流程正常、异常标识；1表示正常，0表示异常、后续走宕机模式
+	NewCaptcha string `json:"new_captcha"` // 新版验证码标识，固定不变
+	Challenge  string `json:"challenge"`   // 流水号，一次完整验证流程的唯一标识
+	Gt         string `json:"gt"`          // 向极验申请的账号id
+}
