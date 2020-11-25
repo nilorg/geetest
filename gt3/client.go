@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
@@ -125,7 +126,7 @@ func (g *Client) Register(digestmod string, userID ...string) (res *RegisterResp
 }
 
 // Validate validate
-func (g *Client) Validate(challenge string, userID ...string) (res *ValidateResponse, err error) {
+func (g *Client) Validate(challenge, seccode string, userID ...string) (res *ValidateResponse, err error) {
 	var reqComm *RequestComm
 	if len(userID) > 0 {
 		reqComm = g.buildRequestComm(userID[0])
@@ -135,7 +136,7 @@ func (g *Client) Validate(challenge string, userID ...string) (res *ValidateResp
 	req := &ValidateRequest{
 		RequestComm: reqComm,
 		CaptchaID:   g.geetestID,
-		Seccode:     fmt.Sprintf("%s|jordan", g.geetestKey),
+		Seccode:     seccode,
 		Challenge:   challenge,
 	}
 	params := util.StructToMap(req)
@@ -148,6 +149,31 @@ func (g *Client) Validate(challenge string, userID ...string) (res *ValidateResp
 	err = json.Unmarshal(body, res)
 	if err != nil {
 		res = nil
+	}
+	return
+}
+
+// BuildChallenge 构建验证初始化返回数据
+func (g *Client) BuildChallenge(challenge string, digestmod string) (enchallenge string) {
+	// challenge 为空或者值为0代表失败
+	if challenge == "" || challenge == "0" {
+		// 本地随机生成32位字符串
+		characters := []byte("0123456789abcdefghijklmnopqrstuvwxyz")
+		challenge := []byte{}
+		for i := 0; i < 32; i++ {
+			challenge = append(challenge, characters[rand.Intn(len(characters))])
+		}
+		enchallenge = string(challenge)
+	} else {
+		if digestmod == "md5" {
+			enchallenge = util.MD5Encode(challenge + g.geetestKey)
+		} else if digestmod == "sha256" {
+			enchallenge = util.Sha256Encode(challenge + g.geetestKey)
+		} else if digestmod == "hmac-sha256" {
+			enchallenge = util.HmacSha256Encode(challenge, g.geetestKey)
+		} else {
+			enchallenge = util.MD5Encode(challenge + g.geetestKey)
+		}
 	}
 	return
 }

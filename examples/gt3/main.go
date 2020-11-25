@@ -21,7 +21,7 @@ func main() {
 	}
 	fmt.Printf("registerResponse: %+v\n", registerResponse)
 	var validateResponse *gt3.ValidateResponse
-	validateResponse, err = client.Validate(registerResponse.Challenge)
+	validateResponse, err = client.Validate(registerResponse.Challenge, "前台传入")
 	if err != nil {
 		fmt.Printf("ValidateResponse Err: %v\n", err)
 		return
